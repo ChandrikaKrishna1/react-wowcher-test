@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { matchQuery, formatNumber, duplicateCheck } from "./utils";
+import {API, matchQuery, formatNumber, duplicateCheck, fetchRequest} from "./utils";
 import logo from "./assets/logo.svg";
 import search from "./assets/search.svg";
 import "./App.css";
@@ -7,17 +7,22 @@ import "./App.css";
 const App = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isError, setError] = useState(false);
-  useEffect(() => getProducts(), []);
+  // useEffect(() => getProducts(), []);
 
-  const getProducts = async () => {
+  useEffect(()=>{
+    (async () => {
     try {
       //fetching all json files into a single array
-      let data = await Promise.all([
-        fetch(`api/branch1.json`).then((res) => res.json()),
-        fetch(`api/branch2.json`).then((res) => res.json()),
-        fetch(`api/branch3.json`).then((res) => res.json()),
-      ]);
+      let data = (
+        await Promise.all([
+       
+						fetchRequest(`${API}/branch1.json`),
+						fetchRequest(`${API}/branch2.json`),
+						fetchRequest(`${API}/branch3.json`),
+					])
+      )
 
       data = data?.reduce(
         //flatening the array to have single products list
@@ -29,7 +34,7 @@ const App = () => {
           const duplicate = acc?.find((item) => duplicateCheck(item, curr));
           // returns first element from accumulator when item and curr product is same
 
-          if (typeof duplicate !== "undefined") {
+          if (!!duplicate) {
             //if duplicate found
             return acc?.map((item) => {
               //loops through accumulator
@@ -45,14 +50,17 @@ const App = () => {
       );
 
       setProducts(data);
+      setLoading(false);
     } catch (error) {
-      setError(error);
+      console.log({error})
     }
-  };
+  })();
+}, []);
 
-  const filteredProducts = products?.filter((product) =>
-    matchQuery(product?.name, searchQuery)
+  const filteredProducts = products?.filter(({ name }) => matchQuery(name?.toLowerCase(), searchQuery.toLowerCase())
   );
+
+  if (loading) return 'Loading...';
 
   return (
     <React.Fragment>
@@ -60,7 +68,7 @@ const App = () => {
         <img src={logo} alt="wowcher logo" />
       </header>
 
-      <div class="product-list">
+      <div className="product-list">
         <div className="search-bar">
           <input
             placeholder="search products"
@@ -71,7 +79,9 @@ const App = () => {
           <img alt="Search icon" src={search} />
         </div>
 
-        {filteredProducts?.length ? (
+        	{loading ? (
+						<p>Loading...</p>
+					) : !!filteredProducts?.length ? (
           <table className="product-list-table">
             <thead>
               <tr>
@@ -83,7 +93,7 @@ const App = () => {
               {filteredProducts
                 ?.sort((a, b) => (a?.name > b?.name ? 1 : -1))
                 ?.map(({ id, name, sold, unitPrice }) => (
-                  <tr key={id}>
+                  <tr key={name}>
                     <td>{name}</td>
                     <td>{formatNumber(sold * unitPrice)}</td>
                   </tr>
