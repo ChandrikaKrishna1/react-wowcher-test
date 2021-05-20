@@ -17,11 +17,10 @@ const App = () => {
       //fetching all json files into a single array
       let data = (
         await Promise.all([
-       
-						fetchRequest(`${API}/branch1.json`),
-						fetchRequest(`${API}/branch2.json`),
-						fetchRequest(`${API}/branch3.json`),
-					])
+              fetchRequest(`${API}/branch1.json`),
+	      fetchRequest(`${API}/branch2.json`),
+	      fetchRequest(`${API}/branch3.json`),
+	      ])
       )
 
       data = data?.reduce(
@@ -78,10 +77,9 @@ const App = () => {
           />
           <img alt="Search icon" src={search} />
         </div>
-
-        	{loading ? (
-						<p>Loading...</p>
-					) : !!filteredProducts?.length ? (
+        {loading ? (
+	<p>Loading...</p>
+	) : !!filteredProducts?.length ? (
           <table className="product-list-table">
             <thead>
               <tr>
